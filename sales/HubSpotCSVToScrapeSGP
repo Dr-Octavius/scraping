@@ -1,0 +1,42 @@
+import csv
+import datetime
+
+def column_to_array(csv_file, column_name):
+    with open(csv_file, 'r') as file:
+        reader = csv.DictReader(file)
+        column_values = [row[column_name] for row in reader]
+    return column_values
+
+csv_file = '../hubspot-crm-exports-all-companies-2023-07-14 (1).csv'
+column_name = 'Company name'
+result = column_to_array(csv_file, column_name)
+
+# Convert the array elements to strings with surrounding apostrophes
+array_str = [f'"{str(item)}"' for item in result]
+
+# Join the array elements into a single string with commas
+output_str = ', '.join(array_str)
+
+# Get current date and time
+now = datetime.datetime.now()
+formatted_datetime = now.strftime('%Y%m%d_%H%M%S')
+
+# Construct the filename using date and time
+filename = f'scrape_{formatted_datetime}.js'
+
+# Read the JavaScript file
+with open('scrape.js', 'r') as file:
+    lines = file.readlines()
+
+# Find the line with the "var inputValues" assignment
+for i, line in enumerate(lines):
+    if line.startswith('var values'):
+        start_index = line.index('[') + 1
+        end_index = line.index(']')
+
+        # Replace the line with the modified array string
+        lines[i] = line[:start_index] + output_str + line[end_index:]
+
+# Write the modified lines to the JavaScript file with today's date in the filename
+with open(filename, 'w') as file:
+    file.writelines(lines)
